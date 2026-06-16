@@ -3,6 +3,8 @@ const app = express();
 
 const mongoose = require("mongoose");
 const path = require("path");
+
+//used to support PUT, PATCH, and DELETE requests from HTML forms
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
@@ -20,39 +22,39 @@ const reviewRouter = require("./routes/review.js")
 const userRouter = require("./routes/user.js")
 
 app.set("view engine", "ejs");
-//This sets the folder where Express should look for your .ejs files
+
+//this sets the folder where Express should look for your .ejs files
 app.set("views", path.join(__dirname, "views"));
-//This middleware is used to parse incoming data and is defined before method-override
+
+//this middleware is used to parse incoming data (form ke raw data ko req.body object me convert) and is defined before method-override
 app.use(express.urlencoded({ extended: true }));
+
 app.use(express.json());
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
-//To Serve Static files
+//to Serve Static files
 app.use(express.static(path.join(__dirname, "/public")));
 const { listingSchema, reviewSchema } = require("./schema.js");
 
-const dburl = process.env.ATLASDB_URL
+const dburl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/wanderlust"
 
 main()
     .then(() => console.log("Database connected successfully!"))
     .catch(err => console.log(err));
 
-function main() {
-    //connect with local db wanderlust
-    // mongoose.connect("mongodb://127.0.0.1:27017/wanderlust");
-
-    //Atlas Database url
-    return mongoose.connect(dburl);
+async function main() {
+    //Atlas Database url or connect with local db wanderlust
+    return await mongoose.connect(dburl);
 }
 
-// methode to create new mongo store
+// method to create new MongoStore for sessions
 const store = MongoStore.create({
     mongoUrl:dburl,
-    client: mongoose.connection.getClient(),
+    // client: mongoose.connection.getClient(),
     crypto:{
         secret: process.env.SECRET,
     },
-    touchAfter: 24*60*60 //in seconds (24 hours)
+    touchAfter: 1*60*60 //in seconds (1 hour)
 });
 
 store.on("error", (err) =>{
@@ -66,15 +68,17 @@ const sessionOptions = {
     saveUninitialized: true,
     cookie: {
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true
+        maxAge: 7 * 24 * 60 * 60 * 1000,//1 week
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' 
     }
 };
 
+// session middleware
 app.use(session(sessionOptions));
 app.use(flash());
 
-//after session ->  authentication
+//authentication middleware, after session ->  authentication
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
@@ -89,17 +93,21 @@ app.use((req, res, next) => {
     next();
 });
 
-
+//routes
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
 
+// 404 handler
 app.all(/.*/, (req, res, next) => {
     next(new ExpressError(404, "Page Not Found!"));
 });
 
-//Error Handling Middleware
+//error handling middleware
 app.use((err, req, res, next) => {
+    if (res.headersSent){
+        return next(err);
+    }
     let { statusCode = 500, message = "something went wrong" } = err;
     res.status(statusCode).render("listings/error.ejs", { message });
 });

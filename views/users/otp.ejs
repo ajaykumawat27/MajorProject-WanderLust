@@ -1,0 +1,33 @@
+<% layout('layouts/boilerplate') -%>
+
+<div class="otp-container">
+  <div class="otp-card">
+    <div class="otp-header">
+      <h2>Verify Your Email</h2>
+      <p class="otp-subtitle">Enter the 6-digit code sent to your email</p>
+    </div>
+
+    <form action="/verify-otp" method="post" class="otp-form">
+      <div class="otp-input-group">
+        <input 
+          type="text" 
+          name="otp" 
+          id="otpInput"
+          placeholder="000000" 
+          maxlength="6" 
+          required 
+          class="otp-input"
+          pattern="[0-9]{6}"
+          inputmode="numeric"
+        />
+        <span class="otp-counter"><span id="charCount">0</span>/6</span>
+      </div>
+
+      <button type="submit" class="otp-btn">Verify OTP</button>
+
+      <div class="otp-footer">
+        <p>Didn't receive the code? <a href="/resend-otp" class="resend-link">Resend OTP</a></p>
+      </div>
+    </form>
+  </div>
+</div>

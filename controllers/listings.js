@@ -1,5 +1,6 @@
 const Listing = require("../models/listing");
 const path = require("path");
+const ExpressError = require("../utils/ExpressError.js");
 
 //Index Route
 module.exports.index = async (req, res) => {

@@ -17,3 +17,15 @@
     }, false)
   })
 })()
+
+// //character counter for otp page
+document.getElementById('otpInput').addEventListener('input', (e) => {
+document.getElementById('charCount').textContent = e.target.value.length;
+});
+
+//at otp page only numbers are allowed
+document.getElementById('otpInput').addEventListener('keypress', (e) => {
+  if (!/[0-9]/.test(e.key)) {
+    e.preventDefault();
+  }
+});

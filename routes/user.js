@@ -6,19 +6,11 @@ const passport = require("passport");
 const { saveRedirectedUrl } = require("../middleware.js");
 
 const userController = require("../controllers/users.js");
-// const renderVerifyOtpForm = require("../controllers/users.js");
-// const verifyOtp = require("../controllers/users.js");
 
 router
 .route("/signup")
 .get(userController.renderSignupForm)
-.post(userController.signup)
-
-router
-.route("/verify-otp")
-.get(userController.renderVerifyOtpForm)
-.post(userController.verifyOtp)
-
+.post(wrapAsync(userController.signup))
 
 router
 .route("/login")

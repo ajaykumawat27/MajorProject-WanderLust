@@ -9,13 +9,7 @@ const userSchema = new Schema({
         required: true
     },
     //username and password are automatically defined by (passport-local-mongoose)
-    isVerified:{
-        type:Boolean,
-        default:false
-    },
-    verificationCode:{
-        type: String,
-    }
+
 },{timestamps : true});
 userSchema.plugin(passportLocalMongoose);
 module.exports = mongoose.model("User", userSchema);
